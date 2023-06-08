@@ -19,7 +19,34 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+###### VARIABLE DEFINITION #########################
+
+PROJECT_PATH=$(pwd)
 ISAAC_SIM_VERSION="2022.2.1"  # Isaac SIM version
+ISAAC_SIM_PATH="$HOME/.local/share/ov/pkg/isaac_sim-$ISAAC_SIM_VERSION"
+
+ISAAC_SIM_DEMO_PATH="$PROJECT_PATH/start_isaac_sim.py"
+
+#####################################################
+
+# Define color variables using tput
+BLACK=$(tput setaf 0)
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+BLUE=$(tput setaf 4)
+MAGENTA=$(tput setaf 5)
+CYAN=$(tput setaf 6)
+WHITE=$(tput setaf 7)
+BOLD=$(tput bold)
+NC=$(tput sgr0) # No Color
+
+# Function to colorize echo messages
+colorize_echo() {
+  local color="$1"
+  local message="$2"
+  echo "${color}${message}${NC}"
+}
 
 usage()
 {
@@ -28,7 +55,7 @@ usage()
     fi
     
     local name=$(basename ${0})
-    echo "Run NVIDIA Isaac SIM $ISAAC_SIM_VERSION and test camera benchmark" >&2
+    echo "Run NVIDIA Isaac SIM $ISAAC_SIM_VERSION and test camera benchmark"
 }
 
 main()
@@ -42,12 +69,19 @@ main()
                 exit 0
                 ;;
             *)
-                usage "[ERROR] Unknown option: $1" >&2
+                colorize_echo $RED "[ERROR] Unknown option: $1"
                 exit 1
                 ;;
         esac
             shift 1
     done
+
+    # https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_nvblox/blob/main/docs/tutorial-isaac-sim.md
+    # Run Isaac ROS with Carter in a Warehouse
+    echo " - $(colorize_echo $GREEN "Start Isaac SIM ${BOLD}$ISAAC_SIM_VERSION")"
+    echo "   $(colorize_echo $GREEN Path): $ISAAC_SIM_DEMO_PATH"
+    # Run Isaac SIM demo
+    $ISAAC_SIM_PATH/python.sh $ISAAC_SIM_DEMO_PATH
 
 }
 
