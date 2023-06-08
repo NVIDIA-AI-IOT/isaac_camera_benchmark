@@ -42,10 +42,11 @@ BOLD=$(tput bold)
 NC=$(tput sgr0) # No Color
 
 # Function to colorize echo messages
-colorize_echo() {
-  local color="$1"
-  local message="$2"
-  echo "${color}${message}${NC}"
+colorize_echo()
+{
+    local color="$1"
+    local message="$2"
+    echo "${color}${message}${NC}"
 }
 
 usage()
@@ -60,29 +61,29 @@ usage()
 
 main()
 {
-
+    
     # Decode all information from startup
     while [ -n "$1" ]; do
         case "$1" in
             -h|--help) # Load help
                 usage
                 exit 0
-                ;;
+            ;;
             *)
                 colorize_echo $RED "[ERROR] Unknown option: $1"
                 exit 1
-                ;;
+            ;;
         esac
-            shift 1
+        shift 1
     done
-
+    
     # https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_nvblox/blob/main/docs/tutorial-isaac-sim.md
     # Run Isaac ROS with Carter in a Warehouse
     echo " - $(colorize_echo $GREEN "Start Isaac SIM ${BOLD}$ISAAC_SIM_VERSION")"
     echo "   $(colorize_echo $GREEN Path): $ISAAC_SIM_DEMO_PATH"
     # Run Isaac SIM demo
     $ISAAC_SIM_PATH/python.sh $ISAAC_SIM_DEMO_PATH
-
+    
 }
 
 main $@
