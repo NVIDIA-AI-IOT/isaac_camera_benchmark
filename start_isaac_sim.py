@@ -20,6 +20,7 @@ import os
 import random
 import time
 import json
+import pprint
 
 import omni
 
@@ -446,6 +447,7 @@ if __name__ == '__main__':
                     generated/used!!'
             )
 
-    print(config)
+    # Indented format with 2 spaces for indentation
+    pprint.pprint(config, indent=2)
 
-    main(config)
+    # main(config)
