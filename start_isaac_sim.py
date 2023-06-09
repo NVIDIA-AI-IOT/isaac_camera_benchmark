@@ -19,6 +19,7 @@ import argparse
 import os
 import random
 import time
+import json
 
 import omni
 
@@ -29,6 +30,51 @@ ADDITIONAL_EXTENSIONS_PEOPLE = [
     'omni.anim.graph.bundle', 'omni.anim.graph.core', 'omni.anim.graph.ui',
     'omni.anim.retarget.bundle', 'omni.anim.retarget.core',
     'omni.anim.retarget.ui', 'omni.kit.scripting']
+
+
+DEFAULT_CONFIG = {
+    # Path of the scenario to launch relative to the nucleus server base path. Scenario must contain a carter robot.
+    # If the scene contains animated humans, the script expects to find them under /World/Humans.
+    # Example scenarios are /Isaac/Samples/NvBlox/carter_warehouse_navigation_with_people.usd
+    # or /Isaac/Samples/NvBlox/carter_warehouse_navigation.usd
+    # or /Isaac/Samples/ROS2/Scenario/carter_warehouse_apriltags_worker.usd
+    'scenario_path': '/Isaac/Samples/NvBlox/carter_warehouse_navigation.usd',
+    # Directory location to save the waypoints in a yaml file
+    'anim_people_waypoint_dir': '',
+    # Path to the world to create a navigation mesh.
+    'environment_prim_path': '/World/WareHouse',
+    # Choose whether we generate random waypoint or run sim
+    'random_command_generation': False,
+    # Number of waypoints to generate for each human in the scene.
+    'num_waypoints': 5,
+    # Run the simulation headless.
+    'headless': False,
+    # If used, animation extensions for humans will be enabled.
+    'with_people': False,
+    # Choose whether to use generated/custom command file or to use the default one to run the people animation
+    'use_generated_command_file': False,
+    # The rate (in hz) that we step the simulation at.
+    'tick_rate_hz': 20,
+    # Number camera to test
+    'camera': [
+        ['1024', '768']
+    ]
+}
+
+
+def read_config(filename):
+    try:
+        with open(filename, 'r') as file:
+            config_data = json.load(file)
+    except FileNotFoundError:
+        print(
+            f"Config file '{filename}' not found. Using default configuration.")
+        return DEFAULT_CONFIG
+
+    # Update default config with values from the file
+    config = DEFAULT_CONFIG.copy()
+    config.update(config_data)
+    return config
 
 
 def enable_extensions_for_sim(with_people: bool = False):
@@ -199,18 +245,31 @@ def update_people_command_file_path(anim_people_command_dir: str):
         path='/exts/omni.anim.people/command_settings/command_file_path',
         value=anim_people_command_dir + '/human_cmd_file.txt')
 
+
 def configure_camera(carter_prim_path, controller, name):
     # print(f"----------------------------- {name} -------------------------------------")
     # Change publication topics
     rgb = controller.node(f'ros2_create_camera_{name}_rgb',
                           f'{carter_prim_path}/ROS_Cameras')
-    rgb.get_attribute('inputs:topicName').set(f'/front/stereo_camera/{name}/rgb')
+    rgb.get_attribute('inputs:topicName').set(
+        f'/front/stereo_camera/{name}/rgb')
     info = controller.node(f'ros2_create_camera_{name}_info',
                            f'{carter_prim_path}/ROS_Cameras')
-    info.get_attribute('inputs:topicName').set(f'/front/stereo_camera/{name}/camera_info')
+    info.get_attribute('inputs:topicName').set(
+        f'/front/stereo_camera/{name}/camera_info')
     depth = controller.node(f'ros2_create_camera_{name}_depth',
                             f'{carter_prim_path}/ROS_Cameras')
-    depth.get_attribute('inputs:topicName').set(f'/front/stereo_camera/{name}/depth')
+    depth.get_attribute('inputs:topicName').set(
+        f'/front/stereo_camera/{name}/depth')
+
+    # Create camera node and set target resolution
+    resolution_node = controller.create_node(
+        f'{carter_prim_path}/ROS_Cameras/isaac_set_viewport_resolution',
+        'omni.isaac.core_nodes.IsaacSetViewportResolution',
+        True,
+    )
+    resolution_node.get_attribute('inputs:width').set(640)
+    resolution_node.get_attribute('inputs:height').set(480)
 
     # Finally, enable rgb and depth
     for enable_name in [
@@ -223,15 +282,17 @@ def configure_camera(carter_prim_path, controller, name):
 
     return info
 
-def main(scenario_path: str,
-         anim_people_command_dir: str,
-         environment_prim_path: str,
-         random_command_generation: bool,
-         num_waypoints: int,
-         headless: bool = False,
-         with_people: bool = True,
-         use_generated_command_file: bool = False,
-         tick_rate_hz: float = 20.0):
+
+def main(config):
+    scenario_path = config['scenario_path']
+    anim_people_command_dir = config['anim_people_waypoint_dir']
+    environment_prim_path = config['environment_prim_path']
+    random_command_generation = config['random_command_generation']
+    num_waypoints = config['num_waypoints']
+    headless = config['headless']
+    with_people = config['with_people']
+    use_generated_command_file = config['use_generated_command_file']
+    tick_rate_hz = config['tick_rate_hz']
 
     # Start up the simulator
     from omni.isaac.kit import SimulationApp
@@ -280,7 +341,6 @@ def main(scenario_path: str,
         if not random_command_generation and use_generated_command_file:
             update_people_command_file_path(anim_people_command_dir)
 
-
     # Modify the omnigraph to get lidar point cloud published
 
     import omni.graph.core as og
@@ -304,7 +364,7 @@ def main(scenario_path: str,
     configure_camera(carter_prim_path, controller, 'left')
     # Configure right camera
     right_info = configure_camera(carter_prim_path, controller, 'right')
-    
+
     stereo_offset = [-175.92, 0]
     # Set attribute
     right_info.get_attribute('inputs:stereoOffset').set(stereo_offset)
@@ -364,62 +424,28 @@ def main(scenario_path: str,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Sample app for running Carter in a Warehouse for NVblox.')
-    parser.add_argument(
-        '--scenario_path',
-        help='Path of the scenario to launch relative to the nucleus server '
-        'base path. Scenario must contain a carter robot. If the scene '
-        'contains animated humans, the script expects to find them under /World/Humans. '
-        'Example scenarios are /Isaac/Samples/NvBlox/carter_warehouse_navigation_with_people.usd '
-        'or /Isaac/Samples/NvBlox/carter_warehouse_navigation.usd',
-        #default='/Isaac/Samples/NvBlox/carter_warehouse_navigation.usd'
-        default='/Isaac/Samples/ROS2/Scenario/carter_warehouse_apriltags_worker.usd'
-        )
-    parser.add_argument('--environment_prim_path',
-                        default='/World/WareHouse',
+        description='Sample app for running Carter in a Warehouse')
+    parser.add_argument('--config_path',
+                        default='config.json',
                         help='Path to the world to create a navigation mesh.')
-    parser.add_argument(
-        '--tick_rate_hz',
-        type=int,
-        help='The rate (in hz) that we step the simulation at.',
-        default=20)
-    parser.add_argument(
-        '--anim_people_waypoint_dir',
-        help='Directory location to save the waypoints in a yaml file')
-    parser.add_argument('--headless', action='store_true',
-                        help='Run the simulation headless.')
-    parser.add_argument(
-        '--with_people',
-        help='If used, animation extensions for humans will be enabled.',
-        action='store_true')
-    parser.add_argument(
-        '--random_command_generation',
-        help='Choose whether we generate random waypoint or run sim',
-        action='store_true')
-    parser.add_argument('--num_waypoints', type=int,
-                        help='Number of waypoints to generate for each human in the scene.',
-                        default=5)
-    parser.add_argument(
-        '--use_generated_command_file',
-        help='Choose whether to use generated/custom command file or to use the default one to run\
-              the people animation',
-        action='store_true')
     # This allows for IsaacSim options to be passed on the SimulationApp.
     args, unknown = parser.parse_known_args()
 
+    config = read_config(args.config_path)
+
     # If we want to generate the command file then we run the simulation headless
-    if args.random_command_generation:
-        args.headless = True
+    if config['random_command_generation']:
+        config['headless'] = True
 
     # Check if the command file directory is given if it has to be generated or used for the
     # simulation
-    if args.random_command_generation or args.use_generated_command_file:
-        if not args.anim_people_waypoint_dir:
+    if config['random_command_generation'] or config['use_generated_command_file']:
+        if not config['anim_people_waypoint_dir']:
             raise ValueError(
                 'Input to command file directory required if custom command file has to be \
                     generated/used!!'
             )
 
-    main(args.scenario_path, args.anim_people_waypoint_dir, args.environment_prim_path,
-         args.random_command_generation, args.num_waypoints, args.headless, args.with_people,
-         args.use_generated_command_file, args.tick_rate_hz)
+    print(config)
+
+    main(config)
