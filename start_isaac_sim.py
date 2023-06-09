@@ -450,4 +450,4 @@ if __name__ == '__main__':
     # Indented format with 2 spaces for indentation
     pprint.pprint(config, indent=2)
 
-    # main(config)
+    main(config)
