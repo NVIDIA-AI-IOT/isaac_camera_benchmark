@@ -21,8 +21,11 @@ import random
 import time
 import json
 import pprint
+import numpy as np
 
 import omni
+# from omni.isaac.sensor import Camera
+# import omni.isaac.core.utils.numpy.rotations as rot_utils
 
 ADDITIONAL_EXTENSIONS_BASE = ['omni.isaac.ros2_bridge-humble']
 
@@ -57,9 +60,10 @@ DEFAULT_CONFIG = {
     # The rate (in hz) that we step the simulation at.
     'tick_rate_hz': 20,
     # Number camera to test
-    'camera': [
-        ['1024', '768']
-    ]
+    'camera': {
+        'left': [1024, 768],
+        'right': [1024, 768],
+    }
 }
 
 
@@ -247,8 +251,33 @@ def update_people_command_file_path(anim_people_command_dir: str):
         value=anim_people_command_dir + '/human_cmd_file.txt')
 
 
-def configure_camera(carter_prim_path, controller, name):
+def new_camera():
+    camera = Camera(
+        prim_path="/World/camera",
+        position=np.array([0.0, 0.0, 25.0]),
+        frequency=20,
+        resolution=(256, 256),
+        orientation=rot_utils.euler_angles_to_quats(
+            np.array([0, 90, 0]), degrees=True),
+    )
+
+    camera.initialize()
+    camera.add_motion_vectors_to_frame()
+
+
+def configure_camera(carter_prim_path, controller, name, config_camera):
     # print(f"----------------------------- {name} -------------------------------------")
+    # Create camera node and set target resolution
+    viewport_node = controller.node(f'isaac_create_viewport_{name}',
+                                    f'{carter_prim_path}/ROS_Cameras')
+    viewport_node.get_attribute('inputs:name').set(name)
+    # Change resolution
+    resolution = config_camera.get(name, [640, 480])
+    # Create camera node and set target resolution
+    resolution_node = controller.node(f'isaac_set_viewport_resolution_{name}',
+                                      f'{carter_prim_path}/ROS_Cameras')
+    resolution_node.get_attribute('inputs:width').set(resolution[0])
+    resolution_node.get_attribute('inputs:height').set(resolution[1])
     # Change publication topics
     rgb = controller.node(f'ros2_create_camera_{name}_rgb',
                           f'{carter_prim_path}/ROS_Cameras')
@@ -262,15 +291,6 @@ def configure_camera(carter_prim_path, controller, name):
                             f'{carter_prim_path}/ROS_Cameras')
     depth.get_attribute('inputs:topicName').set(
         f'/front/stereo_camera/{name}/depth')
-
-    # Create camera node and set target resolution
-    resolution_node = controller.create_node(
-        f'{carter_prim_path}/ROS_Cameras/isaac_set_viewport_resolution',
-        'omni.isaac.core_nodes.IsaacSetViewportResolution',
-        True,
-    )
-    resolution_node.get_attribute('inputs:width').set(640)
-    resolution_node.get_attribute('inputs:height').set(480)
 
     # Finally, enable rgb and depth
     for enable_name in [
@@ -361,10 +381,13 @@ def main(config):
                                                 # 'ros2_publish_transform_tree_01',
                                                 ]})
 
+    config_camera = config.get('camera', {})
+    # new_camera()
     # Configure left camera
-    configure_camera(carter_prim_path, controller, 'left')
+    configure_camera(carter_prim_path, controller, 'left', config_camera)
     # Configure right camera
-    right_info = configure_camera(carter_prim_path, controller, 'right')
+    right_info = configure_camera(
+        carter_prim_path, controller, 'right', config_camera)
 
     stereo_offset = [-175.92, 0]
     # Set attribute
@@ -403,10 +426,15 @@ def main(config):
         simulation_context.step()
 
     # Dock the second camera window
-    right_viewport = omni.ui.Workspace.get_window('Viewport')
-    left_viewport = omni.ui.Workspace.get_window('1')  # Viewport 2
-    if right_viewport is not None and left_viewport is not None:
-        left_viewport.dock_in(right_viewport, omni.ui.DockPosition.LEFT)
+    viewport = omni.ui.Workspace.get_window('Viewport')
+    right_viewport = omni.ui.Workspace.get_window('right')
+    right_viewport.dock_in(viewport, omni.ui.DockPosition.RIGHT)
+    left_viewport = omni.ui.Workspace.get_window('left')
+    left_viewport.dock_in(viewport, omni.ui.DockPosition.LEFT)
+
+    omni.ui.Workspace.show_window('Viewport', False)
+    # viewport.undock()
+    viewport = None
     right_viewport = None
     left_viewport = None
 
