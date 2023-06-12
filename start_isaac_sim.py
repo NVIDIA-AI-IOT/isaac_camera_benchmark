@@ -59,10 +59,12 @@ DEFAULT_CONFIG = {
     'use_generated_command_file': False,
     # The rate (in hz) that we step the simulation at.
     'tick_rate_hz': 20,
+    # Enable odometry carter
+    'enable_odometry': True,
     # Number camera to test
     'camera': {
-        'left': [1024, 768],
-        'right': [1024, 768],
+        'left': [640, 480],
+        'right': [640, 480],
     }
 }
 
@@ -314,6 +316,7 @@ def main(config):
     with_people = config['with_people']
     use_generated_command_file = config['use_generated_command_file']
     tick_rate_hz = config['tick_rate_hz']
+    enable_odometry = config['enable_odometry']
 
     # Start up the simulator
     from omni.isaac.kit import SimulationApp
@@ -367,8 +370,6 @@ def main(config):
     import omni.graph.core as og
     keys = og.Controller.Keys
     controller = og.Controller()
-
-    enable_odometry = False
 
     carter_prim_path = '/World/Carter_ROS'
 
