@@ -62,6 +62,11 @@ DEFAULT_CONFIG = {
     # Enable odometry carter
     'enable_odometry': True,
     # Number camera to test
+    # Camera resolutions:
+    # [640, 480]
+    # [1024, 768]
+    # [1920, 1080]
+    # [3840, 2160]
     'camera': {
         'left': [640, 480],
         'right': [640, 480],
