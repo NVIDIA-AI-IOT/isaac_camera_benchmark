@@ -24,10 +24,9 @@ import pprint
 import numpy as np
 
 import omni
-# from omni.isaac.sensor import Camera
-# import omni.isaac.core.utils.numpy.rotations as rot_utils
 
-ADDITIONAL_EXTENSIONS_BASE = ['omni.isaac.ros2_bridge-humble']
+ADDITIONAL_EXTENSIONS_BASE = [
+    'omni.isaac.ros2_bridge-humble', 'omni.isaac.sensor']
 
 ADDITIONAL_EXTENSIONS_PEOPLE = [
     'omni.anim.people', 'omni.anim.navigation.bundle', 'omni.anim.timeline',
@@ -259,6 +258,10 @@ def update_people_command_file_path(anim_people_command_dir: str):
 
 
 def new_camera():
+
+    from omni.isaac.sensor import Camera
+    import omni.isaac.core.utils.numpy.rotations as rot_utils
+
     camera = Camera(
         prim_path="/World/camera",
         position=np.array([0.0, 0.0, 25.0]),
