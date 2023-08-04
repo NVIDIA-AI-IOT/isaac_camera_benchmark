@@ -1,5 +1,11 @@
 # isaac_camera_benchmark
 
+This tool run a simple test to check the performance of your desktop on Isaac SIM.
+You can run multiple test, with and without ROS and read:
+
+* Camera performance from 1 to 4 cameras
+* Change resolution
+* ROS2
 
 ## Hardware required
 
@@ -17,13 +23,13 @@ Clone this repository and move to repository folder
 
 ```console
 git clone https://github.com/nvidia_iot/isaac_camera_benchmark.git
-cd isaac_demo
+cd isaac_camera_benchmark
 ```
 
 Run the installer
 
 ```console
-./isaac_demo.sh
+./run_camera_benchmark.sh.sh
 ```
 
 #### NVIDIA Isaac SIM
@@ -42,4 +48,3 @@ Open Omniverse Launcher
 Move to Library and choice "Omniverse Isaac SIM" and download the latest 2022.2 version
 
 ![Omniverse library](https://docs.omniverse.nvidia.com/app_isaacsim/_images/isaac_main_launcher_library.png)
-

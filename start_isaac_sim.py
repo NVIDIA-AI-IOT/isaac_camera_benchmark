@@ -376,6 +376,11 @@ def main(config):
     # Enables the simulation extensions
     enable_extensions_for_sim(with_people)
 
+    # Note that this is not the system level rclpy, but one compiled for omniverse
+    from std_msgs.msg import String
+    from rclpy.node import Node
+    import rclpy
+
     assets_root_path = get_assets_root_path()
     if assets_root_path is None:
         print(
