@@ -41,7 +41,8 @@ DEFAULT_CONFIG = {
     # Example scenarios are /Isaac/Samples/NvBlox/carter_warehouse_navigation_with_people.usd
     # or /Isaac/Samples/NvBlox/carter_warehouse_navigation.usd
     # or /Isaac/Samples/ROS2/Scenario/carter_warehouse_apriltags_worker.usd
-    'scenario_path': '/Isaac/Samples/NvBlox/carter_warehouse_navigation.usd',
+    # 'scenario_path': '/Isaac/Samples/NvBlox/carter_warehouse_navigation.usd',
+    'scenario_path': 'omniverse://localhost/Users/rbonghi/carter_warehouse_navigation.usd',
     # Directory location to save the waypoints in a yaml file
     'anim_people_waypoint_dir': '',
     # Path to the world to create a navigation mesh.
@@ -64,11 +65,30 @@ DEFAULT_CONFIG = {
     # Camera resolutions:
     # [640, 480]
     # [1024, 768]
+    # [1280, 720]
     # HD [1920, 1080]
     # 4K [3840, 2160]
     'camera': {
-        'left': [640, 480],
-        'right': [640, 480],
+        'left': {
+            'resolution': [1280, 720],
+            'enable_rgb': True,
+            'enable_depth': True,
+        },
+        'right': {
+            'resolution': [1280, 720],
+            'enable_rgb': True,
+            'enable_depth': True,
+        },
+        'extra': {
+            'resolution': [640, 480],
+            'enable_rgb': False,
+            'enable_depth': False,
+        },
+        'extra2': {
+            'resolution': [640, 480],
+            'enable_rgb': False,
+            'enable_depth': False,
+        },
     }
 }
 
@@ -282,7 +302,8 @@ def configure_camera(carter_prim_path, controller, name, config_camera):
                                     f'{carter_prim_path}/ROS_Cameras')
     viewport_node.get_attribute('inputs:name').set(name)
     # Change resolution
-    resolution = config_camera.get(name, [640, 480])
+    camera_data = config_camera.get(name, {})
+    resolution = camera_data.get('resolution', [640, 480])
     # Create camera node and set target resolution
     resolution_node = controller.node(f'isaac_set_viewport_resolution_{name}',
                                       f'{carter_prim_path}/ROS_Cameras')
@@ -302,16 +323,31 @@ def configure_camera(carter_prim_path, controller, name, config_camera):
     depth.get_attribute('inputs:topicName').set(
         f'/front/stereo_camera/{name}/depth')
 
-    # Finally, enable rgb and depth
-    for enable_name in [
-            f'enable_camera_{name}', f'enable_camera_{name}_rgb',
-            f'enable_camera_{name}_depth'
-    ]:
-        enable = controller.node(enable_name,
+    # Read enable camera
+    enable_camera_rgb = camera_data.get('enable_rgb', True)
+    enable_camera_depth = camera_data.get('enable_depth', True)
+    enable_camera = enable_camera_rgb or enable_camera_depth
+    print(name, enable_camera)
+
+    # Enable camera
+    enable = controller.node(f'enable_camera_{name}',
+                             f'{carter_prim_path}/ROS_Cameras')
+    enable.get_attribute('inputs:condition').set(enable_camera)
+    # Enable camera rgb
+    enable_rgb = controller.node(f'enable_camera_{name}_rgb',
                                  f'{carter_prim_path}/ROS_Cameras')
-        enable.get_attribute('inputs:condition').set(True)
+    enable_rgb.get_attribute('inputs:condition').set(enable_camera_rgb)
+    # Enable camera depth
+    enable_depth = controller.node(f'enable_camera_{name}_depth',
+                                   f'{carter_prim_path}/ROS_Cameras')
+    enable_depth.get_attribute('inputs:condition').set(enable_camera_depth)
 
     return info
+
+
+def export_cycle_value(value):
+    with open('cycle_values.txt', 'a') as file:
+        file.write(str(value) + '\n')
 
 
 def main(config):
@@ -349,7 +385,8 @@ def main(config):
         simulation_app.close()
         exit()
 
-    usd_path = assets_root_path + scenario_path
+    # usd_path = assets_root_path + scenario_path
+    usd_path = scenario_path
     print(f'Opening stage {usd_path}...')
 
     # Load the stage
@@ -397,6 +434,9 @@ def main(config):
     # Configure right camera
     right_info = configure_camera(
         carter_prim_path, controller, 'right', config_camera)
+    # Configure extra camera
+    configure_camera(carter_prim_path, controller, 'extra', config_camera)
+    configure_camera(carter_prim_path, controller, 'extra2', config_camera)
 
     stereo_offset = [-175.92, 0]
     # Set attribute
@@ -435,17 +475,25 @@ def main(config):
         simulation_context.step()
 
     # Dock the second camera window
-    viewport = omni.ui.Workspace.get_window('Viewport')
-    right_viewport = omni.ui.Workspace.get_window('right')
-    right_viewport.dock_in(viewport, omni.ui.DockPosition.RIGHT)
-    left_viewport = omni.ui.Workspace.get_window('left')
-    left_viewport.dock_in(viewport, omni.ui.DockPosition.LEFT)
+    #viewport = omni.ui.Workspace.get_window('Viewport')
+    #right_viewport = omni.ui.Workspace.get_window('right')
+    #right_viewport.dock_in(viewport, omni.ui.DockPosition.RIGHT)
+    #left_viewport = omni.ui.Workspace.get_window('left')
+    #left_viewport.dock_in(viewport, omni.ui.DockPosition.LEFT)
+    #extra_viewport = omni.ui.Workspace.get_window('extra')
+    #extra_viewport.dock_in(viewport, omni.ui.DockPosition.LEFT)
 
-    omni.ui.Workspace.show_window('Viewport', False)
+    #omni.ui.Workspace.show_window('Viewport', False)
     # viewport.undock()
     viewport = None
     right_viewport = None
     left_viewport = None
+    extra_viewport = None
+
+    # Indented format with 2 spaces for indentation
+    pprint.pprint(config, indent=2)
+
+    import omni.kit.viewport.utility as viewport_utils
 
     # Run the sim
     last_frame_time = time.monotonic()
@@ -455,6 +503,10 @@ def main(config):
         if current_frame_time - last_frame_time < time_dt:
             time.sleep(time_dt - (current_frame_time - last_frame_time))
         last_frame_time = time.monotonic()
+
+        viewport_api = viewport_utils.get_active_viewport()
+        print(f"FPS {viewport_api.fps:.2f}", end="\r")
+        export_cycle_value(viewport_api.fps)
 
     simulation_context.stop()
     simulation_app.close()
@@ -488,3 +540,4 @@ if __name__ == '__main__':
     pprint.pprint(config, indent=2)
 
     main(config)
+# EOF
