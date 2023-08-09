@@ -327,7 +327,7 @@ class IsaacWorld:
             self.simulation_context.stop()
             self.simulation_app.close()
             
-    def run_simulation(self, node):
+    def run_simulation(self, node_metrics):
         tick_rate_hz = self.config['tick_rate_hz']
         time_dt = 1.0 / tick_rate_hz
         # Indented format with 2 spaces for indentation
@@ -345,10 +345,11 @@ class IsaacWorld:
                 time.sleep(time_dt - (current_frame_time - last_frame_time))
             last_frame_time = time.monotonic()
 
-            rclpy.spin_once(node, timeout_sec=0.0)
             viewport_api = viewport_utils.get_active_viewport()
             # print(f"FPS {viewport_api.fps:.2f}", end="\r")
             # export_cycle_value(viewport_api.fps)
+            node_metrics.viewpoint(viewport_api.fps)
+            rclpy.spin_once(node_metrics, timeout_sec=0.0)
 
         self.simulation_context.stop()
         self.simulation_app.close()
