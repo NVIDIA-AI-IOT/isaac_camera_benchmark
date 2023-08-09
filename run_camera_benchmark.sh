@@ -25,7 +25,7 @@ PROJECT_PATH=$(pwd)
 ISAAC_SIM_VERSION="2022.2.1"  # Isaac SIM version
 ISAAC_SIM_PATH="$HOME/.local/share/ov/pkg/isaac_sim-$ISAAC_SIM_VERSION"
 
-ISAAC_SIM_DEMO_PATH="$PROJECT_PATH/start_isaac_sim.py"
+ISAAC_SIM_DEMO_PATH="$PROJECT_PATH/start_isaac_sim_benchmark.py"
 
 #####################################################
 
