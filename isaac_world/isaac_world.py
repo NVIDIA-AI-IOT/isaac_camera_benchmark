@@ -6,6 +6,7 @@ import os
 import time
 import pprint
 
+
 def rebuild_nav_mesh():
     """
     Rebuild the navmesh with the correct settings. Used for the people to move around.
@@ -272,7 +273,7 @@ class IsaacWorld:
         if not enable_odometry:
             # Remove odometry from Carter
             og.Controller.edit(f'{carter_prim_path}/ActionGraph',
-                            {keys.DELETE_NODES: ['isaac_compute_odometry_node',
+                               {keys.DELETE_NODES: ['isaac_compute_odometry_node',
                                                     'ros2_publish_odometry',
                                                     'ros2_publish_raw_transform_tree',
                                                     # 'ros2_publish_transform_tree_01',
@@ -297,9 +298,9 @@ class IsaacWorld:
         print(f'Running sim at {tick_rate_hz} Hz, with dt of {time_dt}')
         # Run physics at 60 Hz and render time at the set frequency to see the sim as real time
         self.simulation_context = SimulationContext(stage_units_in_meters=1.0,
-                                            physics_dt=1.0 / 60,
-                                            rendering_dt=time_dt)
-        
+                                                    physics_dt=1.0 / 60,
+                                                    rendering_dt=time_dt)
+
     def start_simulation(self):
         with_people = self.config['with_people']
         random_command_generation = self.config['random_command_generation']
@@ -316,7 +317,7 @@ class IsaacWorld:
         if with_people and random_command_generation:
             print('Creating human animation file...')
             create_people_commands(environment_prim_path,
-                                anim_people_command_dir, 10, num_waypoints)
+                                   anim_people_command_dir, 10, num_waypoints)
             print(
                 'Human command file has been created at {}/human_human_cmd_file.txt'
                 .format(anim_people_command_dir))
@@ -326,7 +327,7 @@ class IsaacWorld:
             )
             self.simulation_context.stop()
             self.simulation_app.close()
-            
+
     def run_simulation(self, node_metrics):
         tick_rate_hz = self.config['tick_rate_hz']
         time_dt = 1.0 / tick_rate_hz
@@ -346,8 +347,7 @@ class IsaacWorld:
             last_frame_time = time.monotonic()
 
             viewport_api = viewport_utils.get_active_viewport()
-            # print(f"FPS {viewport_api.fps:.2f}", end="\r")
-            # export_cycle_value(viewport_api.fps)
+
             node_metrics.viewpoint(viewport_api.fps)
             rclpy.spin_once(node_metrics, timeout_sec=0.0)
 

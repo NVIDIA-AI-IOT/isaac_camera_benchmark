@@ -8,3 +8,6 @@ OLD
 camera.py
 test.py
 cycle_values.txt
+
+.vscode/
+hz.py

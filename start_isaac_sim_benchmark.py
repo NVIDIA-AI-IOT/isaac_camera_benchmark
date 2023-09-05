@@ -147,7 +147,7 @@ if __name__ == '__main__':
 
     # Indented format with 2 spaces for indentation
     pprint.pprint(config, indent=2)
-    
+
     headless = config['headless']
     with_people = config['with_people']
 
@@ -160,13 +160,13 @@ if __name__ == '__main__':
 
     # Enables the simulation extensions
     enable_extensions_for_sim(with_people)
-    
+
     import rclpy
     from isaac_world.topic_reader import TopicHzReader
     rclpy.init()
     # Isaac SIM world
     isaac_world = IsaacWorld(config, simulation_app)
-    
+
     # Start simulation
     isaac_world.start_simulation()
     # Initialize node
