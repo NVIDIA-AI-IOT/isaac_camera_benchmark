@@ -92,3 +92,15 @@ On the `simulation` field you can change the simulation configuration, example m
     'simulation': {"renderer": "RayTracedLighting", "headless": True}
 }
 ```
+
+## Record camera
+
+If you want to record in a ros2 bag file all camera you can simply run
+
+```console
+./ros2record.sh
+```
+
+That simply export all camera in a **rosbag2** folder, the output will be like the picture below.
+
+![ros2 bag record](.doc/ros2record.png)
