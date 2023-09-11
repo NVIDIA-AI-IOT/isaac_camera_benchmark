@@ -104,3 +104,5 @@ If you want to record in a ros2 bag file all camera you can simply run
 That simply export all camera in a **rosbag2** folder, the output will be like the picture below.
 
 ![ros2 bag record](.doc/ros2record.png)
+
+All ros2bag file will be available on folder `isaac_camera_benchmark/rosbag`.
