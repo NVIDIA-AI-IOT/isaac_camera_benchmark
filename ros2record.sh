@@ -31,7 +31,7 @@ main()
             ${DOCKER_ARGS[@]} \
             -v "$(pwd)/rosbag:/rosbag" \
             -v "$(pwd)/record_docker:/usr/local/share/middleware_profiles" \
-            ros:humble-ros-base cd /rosbag && ros2 bag record /Camera0/rgb
+            ros:humble-ros-base cd /rosbag && ros2 bag record -e '/Camera(.*)
 }
 
 main $@
