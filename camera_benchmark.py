@@ -278,3 +278,4 @@ if __name__ == "__main__":
     # Start simulation
     subscriber = BenchmarkCamera(config)
     subscriber.run_simulation()
+# EOF

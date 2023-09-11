@@ -32,6 +32,7 @@ ISAAC_SIM_DEMO_PATH="$PROJECT_PATH/camera_benchmark.py"
 # Define color variables using tput
 BLACK=$(tput setaf 0)
 RED=$(tput setaf 1)
+
 GREEN=$(tput setaf 2)
 YELLOW=$(tput setaf 3)
 BLUE=$(tput setaf 4)
