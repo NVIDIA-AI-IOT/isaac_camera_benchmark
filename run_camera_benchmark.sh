@@ -22,10 +22,12 @@
 ###### VARIABLE DEFINITION #########################
 
 PROJECT_PATH=$(pwd)
-ISAAC_SIM_VERSION="2022.2.1"  # Isaac SIM version
+ISAAC_SIM_VERSION="2023.1.0-rc.15"  # Isaac SIM version
+ISAAC_ROS_PATH="$PROJECT_PATH/foxy_ws"
 ISAAC_SIM_PATH="$HOME/.local/share/ov/pkg/isaac_sim-$ISAAC_SIM_VERSION"
 
 ISAAC_SIM_DEMO_PATH="$PROJECT_PATH/camera_benchmark.py"
+#ISAAC_SIM_DEMO_PATH="$ISAAC_SIM_PATH/standalone_examples/api/omni.isaac.ros2_bridge/camera_periodic.py"
 
 #####################################################
 
@@ -77,7 +79,23 @@ main()
         esac
         shift 1
     done
+
+    if [ ! -d "$ISAAC_ROS_PATH" ]; then
+        colorize_echo $YELLOW "[WARNING] Isaac ROS folder SIM not found"
+
+        # Do something like that in final release
+        # docker pull nvcr.io/nvidia/isaac_sim_ros:ubuntu_20_foxy
+        colorize_echo $GREEN "Build Isaac ROS Docker"
+        cd isaac_ros_packaging/docker
+        docker build . --network=host -f ubuntu_20_foxy_minimal.dockerfile -t isaac_sim_ros:ubuntu_20_foxy
+        
+        colorize_echo $GREEN "Import Isaac ROS sources"
+        docker run --rm -v $PROJECT_PATH:/isaac_sim isaac_sim_ros:ubuntu_20_foxy cp -R foxy_ws /isaac_sim
+        sudo chown -R $(id -u):$(id -g) $PROJECT_PATH/foxy_ws/
+    fi
     
+    colorize_echo $GREEN "Load Isaac ROS sources"
+    source foxy_ws/install/setup.bash
     # https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_nvblox/blob/main/docs/tutorial-isaac-sim.md
     # Run Isaac ROS with Carter in a Warehouse
     echo " - $(colorize_echo $GREEN "Start Isaac SIM ${BOLD}$ISAAC_SIM_VERSION")"

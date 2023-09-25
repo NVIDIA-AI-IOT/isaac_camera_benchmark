@@ -13,11 +13,6 @@ import sys
 import argparse
 
 parser = argparse.ArgumentParser(description="Ros2 Bridge Sample")
-parser.add_argument("--ros2_bridge",
-                    default="omni.isaac.ros2_bridge-humble",
-                    nargs="?",
-                    choices=["omni.isaac.ros2_bridge", "omni.isaac.ros2_bridge-humble"],
-)
 parser.add_argument('--config_path',
                     default='config.json',
                     help='Path to the world to create a navigation mesh.')
@@ -31,9 +26,9 @@ DEFAULT_CONFIG = {
     'simulation': {"renderer": "RayTracedLighting", "headless": False},
     'camera': [
         {'translate': [-1, 5, 1], 'resolution': [640, 480]},
-        {'translate': [-1, 5, 3], 'resolution': [640, 480]},
+        {'translate': [-1, 1, 6], 'resolution': [640, 480]},
         {'translate': [-1, 7, 3], 'resolution': [640, 480]},
-        {'translate': [1, 2, 3], 'resolution': [640, 480]},
+        # {'translate': [1, 2, 3], 'resolution': [640, 480]},
     ]
 }
 
@@ -66,7 +61,7 @@ import omni.graph.core as og
 from omni.isaac.core.utils.prims import set_targets
 
 # enable ROS bridge extension
-extensions.enable_extension(args.ros2_bridge)
+extensions.enable_extension("omni.isaac.ros2_bridge")
 
 simulation_app.update()
 
@@ -237,7 +232,7 @@ class BenchmarkCamera(Node):
             rate = 1. / mean if mean > 0. else 0
             self.last_printed_tn = self.msg_tn
             # Print benchmark
-            rate_print = rate * 1e9
+            rate_print = 2* rate * 1e9
             self.get_logger().info(
                 f"ROS avg: {rate_print:.3f} Hz - Isaac SIM FPs: {fps:.2f}")
 
