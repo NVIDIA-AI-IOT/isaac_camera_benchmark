@@ -4,7 +4,7 @@ This tool run a simple test to check the performance of your desktop on Isaac SI
 
 ![Camera benchmark](.doc/camera_benchmark.png)
 
-You can run multiple test, with and without ROS and read:
+You can run multiple test and read:
 
 * Camera performance from 1 to more
 * Change resolution
