@@ -12,3 +12,7 @@ cycle_values.txt
 .vscode/
 hz.py
 rosbag/
+foxy_ws/
+humble_ws/
+isaac_ros_packaging/
+ros2topic.sh

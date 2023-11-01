@@ -23,8 +23,8 @@
 ###### VARIABLE DEFINITION #########################
 
 PROJECT_PATH=$(pwd)
-ISAAC_SIM_VERSION="2022.2.1"  # Isaac SIM version
-ISAAC_SIM_PATH="$HOME/.local/share/ov/pkg/isaac_sim-$ISAAC_SIM_VERSION"
+ISAAC_SIM_VERSION="prod-isaac_sim-2023.1.0"  # Isaac SIM version
+ISAAC_SIM_PATH="$HOME/.local/share/ov/pkg/$ISAAC_SIM_VERSION"
 
 ISAAC_SIM_DEMO_PATH="$PROJECT_PATH/camera_benchmark.py"
 
@@ -63,6 +63,10 @@ usage()
 
 main()
 {
+    if [ ! -d "$ISAAC_SIM_PATH" ]; then
+        colorize_echo $RED "[ERROR] Isaac SIM $ISAAC_SIM_VERSION folder not found"
+        exit 1
+    fi
     
     # Decode all information from startup
     while [ -n "$1" ]; do
@@ -79,6 +83,11 @@ main()
         shift 1
     done
     
+    # No system level install
+    # https://docs.omniverse.nvidia.com/isaacsim/latest/installation/install_ros.html
+    export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ISAAC_SIM_PATH/exts/omni.isaac.ros2_bridge/humble/lib
+
     # https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_nvblox/blob/main/docs/tutorial-isaac-sim.md
     # Run Isaac ROS with Carter in a Warehouse
     echo " - $(colorize_echo $GREEN "Start Isaac SIM ${BOLD}$ISAAC_SIM_VERSION")"

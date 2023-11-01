@@ -26,11 +26,6 @@ import sys
 import argparse
 
 parser = argparse.ArgumentParser(description="Ros2 Bridge Sample")
-parser.add_argument("--ros2_bridge",
-                    default="omni.isaac.ros2_bridge-humble",
-                    nargs="?",
-                    choices=["omni.isaac.ros2_bridge", "omni.isaac.ros2_bridge-humble"],
-)
 parser.add_argument('--config_path',
                     default='config.json',
                     help='Path to the world to create a navigation mesh.')
@@ -44,9 +39,9 @@ DEFAULT_CONFIG = {
     'simulation': {"renderer": "RayTracedLighting", "headless": False},
     'camera': [
         {'translate': [-1, 5, 1], 'resolution': [640, 480]},
-        {'translate': [-1, 5, 3], 'resolution': [640, 480]},
+        {'translate': [-1, 1, 6], 'resolution': [640, 480]},
         {'translate': [-1, 7, 3], 'resolution': [640, 480]},
-        {'translate': [1, 2, 3], 'resolution': [640, 480]},
+        # {'translate': [1, 2, 3], 'resolution': [640, 480]},
     ]
 }
 
@@ -79,10 +74,11 @@ import omni.graph.core as og
 from omni.isaac.core.utils.prims import set_targets
 
 # enable ROS bridge extension
-extensions.enable_extension(args.ros2_bridge)
+extensions.enable_extension("omni.isaac.ros2_bridge")
 
 simulation_app.update()
 
+import threading
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
@@ -146,6 +142,7 @@ def create_camera(translate=[-1, 5, 1], resolution=[640, 480], number_camera=0):
                 ("createViewport.inputs:viewportId", number_camera),
                 ("setViewportResolution.inputs:width", resolution[0]),
                 ("setViewportResolution.inputs:height", resolution[1]),
+                ("setCamera.inputs:cameraPrim", f"{camera_stage_path}"),
                 ("cameraHelperRgb.inputs:frameId", "sim_camera"),
                 ("cameraHelperRgb.inputs:topicName", f"/Camera{number_camera}/rgb"),
                 ("cameraHelperRgb.inputs:type", "rgb"),
@@ -159,12 +156,6 @@ def create_camera(translate=[-1, 5, 1], resolution=[640, 480], number_camera=0):
         },
     )
 
-    set_targets(
-        prim=stage.get_current_stage().GetPrimAtPath(ros_camera_graph_path + "/setCamera"),
-        attribute="inputs:cameraPrim",
-        target_prim_paths=[camera_stage_path],
-    )
-
     # Run the ROS Camera graph once to generate ROS image publishers in SDGPipeline
     og.Controller.evaluate_sync(ros_camera_graph)
 
@@ -176,7 +167,12 @@ def create_camera(translate=[-1, 5, 1], resolution=[640, 480], number_camera=0):
 class BenchmarkCamera(Node):
     def __init__(self, config):
         super().__init__("benchmark_camera_node")
-
+        # Run ROS2 node in a separate thread
+        executor = rclpy.executors.MultiThreadedExecutor()
+        executor.add_node(self)
+        executor_thread = threading.Thread(target=executor.spin, daemon=True)
+        executor_thread.start()
+        # Init variables
         self.last_printed_tn = 0
         self.msg_t0 = -1
         self.msg_tn = 0
@@ -270,7 +266,7 @@ class BenchmarkCamera(Node):
         while simulation_app.is_running():
             # Run with a fixed step size
             self.simulation_context.step(render=True)
-            rclpy.spin_once(self, timeout_sec=0.0)
+            # rclpy.spin_once(self, timeout_sec=0.0)
             if self.simulation_context.is_playing():
                 if self.simulation_context.current_time_step_index == 0:
                     self.simulation_context.reset()
@@ -291,4 +287,6 @@ if __name__ == "__main__":
     # Start simulation
     subscriber = BenchmarkCamera(config)
     subscriber.run_simulation()
+    # Cleanup
+    rclpy.shutdown()
 # EOF
