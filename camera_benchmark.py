@@ -65,6 +65,7 @@ extensions.enable_extension("omni.isaac.ros2_bridge")
 
 simulation_app.update()
 
+import threading
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
@@ -153,7 +154,12 @@ def create_camera(translate=[-1, 5, 1], resolution=[640, 480], number_camera=0):
 class BenchmarkCamera(Node):
     def __init__(self, config):
         super().__init__("benchmark_camera_node")
-
+        # Run ROS2 node in a separate thread
+        executor = rclpy.executors.MultiThreadedExecutor()
+        executor.add_node(self)
+        executor_thread = threading.Thread(target=executor.spin, daemon=True)
+        executor_thread.start()
+        # Init variables
         self.last_printed_tn = 0
         self.msg_t0 = -1
         self.msg_tn = 0
@@ -227,7 +233,7 @@ class BenchmarkCamera(Node):
             rate = 1. / mean if mean > 0. else 0
             self.last_printed_tn = self.msg_tn
             # Print benchmark
-            rate_print = 2* rate * 1e9
+            rate_print = rate * 1e9
             self.get_logger().info(
                 f"ROS avg: {rate_print:.3f} Hz - Isaac SIM FPs: {fps:.2f}")
 
@@ -247,7 +253,7 @@ class BenchmarkCamera(Node):
         while simulation_app.is_running():
             # Run with a fixed step size
             self.simulation_context.step(render=True)
-            rclpy.spin_once(self, timeout_sec=0.0)
+            # rclpy.spin_once(self, timeout_sec=0.0)
             if self.simulation_context.is_playing():
                 if self.simulation_context.current_time_step_index == 0:
                     self.simulation_context.reset()
@@ -268,4 +274,6 @@ if __name__ == "__main__":
     # Start simulation
     subscriber = BenchmarkCamera(config)
     subscriber.run_simulation()
+    # Cleanup
+    rclpy.shutdown()
 # EOF

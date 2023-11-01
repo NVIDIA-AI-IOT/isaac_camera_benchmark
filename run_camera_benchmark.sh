@@ -26,7 +26,6 @@ ISAAC_SIM_VERSION="prod-isaac_sim-2023.1.0"  # Isaac SIM version
 ISAAC_SIM_PATH="$HOME/.local/share/ov/pkg/$ISAAC_SIM_VERSION"
 
 ISAAC_SIM_DEMO_PATH="$PROJECT_PATH/camera_benchmark.py"
-#ISAAC_SIM_DEMO_PATH="$ISAAC_SIM_PATH/standalone_examples/api/omni.isaac.ros2_bridge/camera_periodic.py"
 
 #####################################################
 

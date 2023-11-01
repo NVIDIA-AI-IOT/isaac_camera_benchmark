@@ -19,7 +19,7 @@ This tool will run a set of camera on your Isaac SIM environment and will start 
 Workstation:
 
 1. x86/64 machine
-2. Install Ubuntu 20.04
+2. Install Ubuntu 20.04 or Ubuntu 22.04
 3. NVIDIA Graphic card with RTX
 4. Display
 5. Keyboard and Mouse
