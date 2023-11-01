@@ -128,6 +128,7 @@ def create_camera(translate=[-1, 5, 1], resolution=[640, 480], number_camera=0):
                 ("createViewport.inputs:viewportId", number_camera),
                 ("setViewportResolution.inputs:width", resolution[0]),
                 ("setViewportResolution.inputs:height", resolution[1]),
+                ("setCamera.inputs:cameraPrim", f"{camera_stage_path}"),
                 ("cameraHelperRgb.inputs:frameId", "sim_camera"),
                 ("cameraHelperRgb.inputs:topicName", f"/Camera{number_camera}/rgb"),
                 ("cameraHelperRgb.inputs:type", "rgb"),
@@ -139,12 +140,6 @@ def create_camera(translate=[-1, 5, 1], resolution=[640, 480], number_camera=0):
                 ("cameraHelperDepth.inputs:type", "depth"),
             ],
         },
-    )
-
-    set_targets(
-        prim=stage.get_current_stage().GetPrimAtPath(ros_camera_graph_path + "/setCamera"),
-        attribute="inputs:cameraPrim",
-        target_prim_paths=[camera_stage_path],
     )
 
     # Run the ROS Camera graph once to generate ROS image publishers in SDGPipeline
