@@ -71,7 +71,6 @@ from omni.isaac.core.utils import stage, extensions, nucleus
 from pxr import Gf, UsdGeom, Usd
 from omni.kit.viewport.utility import get_active_viewport
 import omni.graph.core as og
-from omni.isaac.core.utils.prims import set_targets
 
 # enable ROS bridge extension
 extensions.enable_extension("omni.isaac.ros2_bridge")
