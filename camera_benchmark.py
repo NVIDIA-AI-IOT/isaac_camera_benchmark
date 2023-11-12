@@ -22,6 +22,7 @@
 import carb
 from omni.isaac.kit import SimulationApp
 import sys
+import json
 
 import argparse
 
@@ -64,7 +65,6 @@ config = read_config(args.config_path)
 simulation_app = SimulationApp(config['simulation'])
 
 
-import json
 import omni
 from omni.isaac.core import SimulationContext
 from omni.isaac.core.utils import stage, extensions, nucleus
