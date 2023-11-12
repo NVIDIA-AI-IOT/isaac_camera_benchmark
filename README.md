@@ -52,7 +52,7 @@ Open Omniverse Launcher
 
 ![Omniverse launcher](https://docs.omniverse.nvidia.com/isaacsim/latest/_images/isaac_main_launcher_exchange.png)
 
-Move to Library and choice "Omniverse Isaac SIM" and download the latest 2022.2 version
+Move to Library and choice "Omniverse Isaac SIM" and download the latest 2023.1 version
 
 ![Omniverse library](https://docs.omniverse.nvidia.com/isaacsim/latest/_images/isaac_main_launcher_library.png)
 
