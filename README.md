@@ -76,9 +76,9 @@ Example a json file can be composed in this way
 
 ```json
 {
-    'camera': [
-        {'translate': [-1, 5, 1], 'resolution': [640, 480]},
-        {'translate': [0, 0, 0], 'resolution': [1024, 768]},
+    "camera": [
+        {"translate": [-1, 5, 1], "resolution": [640, 480]},
+        {"translate": [0, 0, 0], "resolution": [1024, 768]},
     ]
 }
 ```
@@ -89,11 +89,20 @@ On the `simulation` field you can change the simulation configuration, example m
 
 ```json
 {
-    'simulation': {"renderer": "RayTracedLighting", "headless": True}
+    "simulation": {"renderer": "RayTracedLighting", "headless": true}
 }
 ```
 
-## Record camera
+### Export benchmark to csv file
+
+If you want to export the output in a csv file you can enable the option that automatically generate a file with name `benchmark_camera_<CURRENT DATE>.csv`
+```json
+{
+    "record": true
+}
+```
+
+## Record camera output
 
 If you want to record in a ros2 bag file all camera you can simply run
 

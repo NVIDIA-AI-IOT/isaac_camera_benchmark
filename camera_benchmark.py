@@ -22,6 +22,8 @@
 import carb
 from omni.isaac.kit import SimulationApp
 import sys
+import csv
+from datetime import datetime
 import json
 
 import argparse
@@ -37,6 +39,7 @@ BACKGROUND_STAGE_PATH = "/background"
 BACKGROUND_USD_PATH = "/Isaac/Environments/Simple_Warehouse/warehouse_with_forklifts.usd"
 
 DEFAULT_CONFIG = {
+    'record': False,
     'simulation': {"renderer": "RayTracedLighting", "headless": False},
     'camera': [
         {'translate': [-1, 5, 1], 'resolution': [640, 480]},
@@ -171,6 +174,9 @@ class BenchmarkCamera(Node):
         executor.add_node(self)
         executor_thread = threading.Thread(target=executor.spin, daemon=True)
         executor_thread.start()
+        # Chech if record is enable
+        current_date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        self.file_path = f'benchmark_camera_{current_date}.csv' if 'record' in config and config['record'] else ''
         # Init variables
         self.last_printed_tn = 0
         self.msg_t0 = -1
@@ -248,6 +254,9 @@ class BenchmarkCamera(Node):
             rate_print = rate * 1e9
             self.get_logger().info(
                 f"ROS avg: {rate_print:.3f} Hz - Isaac SIM FPs: {fps:.2f}")
+            # Print benchmark to csv file
+            if self.file_path:
+                self.csv_writer.writerow([rate_print, fps])
 
     def run_simulation(self):
         # Need to initialize physics getting any articulation..etc
@@ -261,6 +270,12 @@ class BenchmarkCamera(Node):
             for idx in reversed(range(1, n_vieports)):
                 viewport_idx = omni.ui.Workspace.get_window(f"Viewport{idx}")
                 viewport_idx.dock_in(viewport, omni.ui.DockPosition.RIGHT)
+        # Open csv file
+        if self.file_path:
+            csv_file = open(self.file_path, 'w', newline='')
+            # Create a CSV writer object
+            self.csv_writer = csv.writer(csv_file)
+            self.get_logger().info(f'Recording benchmark to {self.file_path}')
         # Run simulation
         while simulation_app.is_running():
             # Run with a fixed step size
@@ -277,6 +292,8 @@ class BenchmarkCamera(Node):
                 xform_api.SetRotate((90, 0, frame / 4.0), UsdGeom.XformCommonAPI.RotationOrderXYZ)
             frame = frame + 1
         # Cleanup
+        if self.file_path:
+            csv_file.close()
         self.simulation_context.stop()
         simulation_app.close()
 
